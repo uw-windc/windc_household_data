@@ -22,9 +22,9 @@ function download_save_data(
         states = STATES
     )
 
-    census_data = load_cps_data_api(census_api_key, years)
+    census_data = load_cps_data_api(census_api_key, years; states = states)
 
-    bea_data = cps_vs_nipa_income_categories(census_data[:income], bea_api_key, years; states = states)
+    bea_data = cps_vs_nipa_income_categories(census_data[:income], bea_api_key, years)
 
     save_cps_data(census_data, bea_data, output_directory, years)
 end
