@@ -18,7 +18,8 @@ include("cps.jl")
 export load_cps_data_api
 
 
+include("bea.jl")
 
-
+export cps_vs_nipa_income_categories
 
 end # module windc_household_data

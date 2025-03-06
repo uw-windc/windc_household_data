@@ -36,7 +36,11 @@ function get_cps_data_api(year, vars, api_key)
     return (data[1],[Tuple(my_parse.(row)) for row in data[2:end]])
 end
 
+"""
+    clean_cps_data_year(year, cps_rw, variables, api_key; states = STATES)
 
+Download and clean the CPS data for a given year.
+"""
 function clean_cps_data_year(year, cps_rw, variables, api_key; states = STATES)
 
     vars = join(vcat(cps_rw,variables), ',')
@@ -65,7 +69,7 @@ function clean_cps_data_year(year, cps_rw, variables, api_key; states = STATES)
         x -> leftjoin(
             x,
             states,
-            on = :state_code => state_fips
+            on = :state_code => :state_fips
         ) |>
         x -> select(x, Not(:state_code))
 
@@ -118,11 +122,63 @@ function clean_cps_data_year(year, cps_rw, variables, api_key; states = STATES)
 end
 
 """
-    load_cps_data_api(api_key; years = 2001:2022)
+    load_cps_data_api(api_key, years; states = STATES)
 
 Load all the CPS data in the given year range. 
+
+## Arguments
+
+- `api_key` - Request an API key from the [Census website](https://api.census.gov/data/key_signup.html)
+- `years` - The years to pull data for, as a range 2000:2023
+
+## Keywords
+
+- `states` - A DataFrame with the state FIPS codes and abbreviations (default is `STATES`)
+
+## Returns
+
+A dictionary with the following keys:
+
+- `income` - A DataFrame with the income data
+- `shares` - A DataFrame with the income shares
+- `count` - A DataFrame with the count of households
+- `numhh` - A DataFrame with the number of households
+
+## API Call
+
+There is a split in 2019. 
+
+| Common | Pre-2019 | Post-2019 | Description |
+|--------|----------|-----------|-------------|
+| HWSVAL | | | wages and salaries |
+| HSEVAL | | | self-employment (nonfarm) |
+| HFRVAL | | | self-employment farm |
+| HUCVAL | | | unemployment compensation |
+| HWCVAL | | | workers compensation |
+| HSSVAL | | | social security |
+| HSSIVAL | | | supplemental security |
+| HPAWVAL | | | public assistance or welfare |
+| HVETVAL | | | veterans benefits |
+| HSURVAL | | | survivors income |
+| HDISVAL | | | disability |
+| HINTVAL | | | interest |
+| HDIVVAL | | | dividends |
+| HRNTVAL | | | rents |
+| HEDVAL | | | educational assistance |
+| HCSPVAL | | | child support |
+| HFINVAL | | | financial assistance |
+| HOIVAL | | | other income |
+| HTOTVAL | | | total household income |
+| | GESTFIPS | | state fips |
+| | A_EXPRRP | | expanded relationship code |
+| | H_HHTYPE | | type of household interview |
+| | PPPOS | | person identifier |
+| | MARSUPWT | | asec supplement final weight |
+| | | HDSTVAL  | retirement distributions |
+| | | HPENVAL  | pension income |
+| | | HANNVAL  | annuities |
 """
-function load_cps_data_api(api_key; years = 2001:2022, states = STATES)
+function load_cps_data_api(api_key, years; states = STATES)
 
     cps_vars = uppercase.([
         "hwsval", # "wages and salaries"
@@ -178,17 +234,17 @@ function load_cps_data_api(api_key; years = 2001:2022, states = STATES)
     for year in years
         println(year)
 
-        if year < 2019
+        if year+1 < 2019
             vars = pre_2019
         else
             vars = post_2019
         end
 
-        T = clean_cps_data_year(year,cps_rw, vars, api_key; states = states)
+        T = clean_cps_data_year(year+1,cps_rw, vars, api_key; states = states)
         
         for e in keys(T)
             df = T[e]
-            df[!,:year] .= year - 1 #Years are offset, I'm not sure why
+            df[!,:year] .= year 
 
             out[e] = vcat(out[e],df)
         end
