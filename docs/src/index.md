@@ -24,9 +24,18 @@ cps_nipa = cps_vs_nipa_income_categories(census_data[:income], bea_api_key, year
 save_cps_data(census_data, cps_nipa, "data/cps", years)
 ```
 
-Alternatively
+Alternatively, you can download and save the data in a single operation.
 
+```julia
+using windc_household_data
 
+census_api_key = "<census_api_key>"
+bea_api_key = "<bea_api_key>"
+
+years = 2000:2023
+
+download_save_data(census_api_key, bea_api_key, years, "data/cps")
+```
 
 ## API Reference
 
