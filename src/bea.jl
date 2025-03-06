@@ -98,15 +98,13 @@ function cps_vs_nipa_income_categories(income::DataFrame, api_key, years)
 
 
     cps_totals = income |>
-        x -> groupby(x, [:year, :source]) |>
-        x -> combine(x, :value => sum => :cps) |>
         x -> innerjoin(
             x,
             line_to_source,
             on = :source => :source
         ) |>
         x -> groupby(x, [:year, :LineNumber, :category]) |>
-        x -> combine(x, :cps => sum => :cps) 
+        x -> combine(x, :value => sum => :cps) 
 
     bea_data = get_bea_nipa_data(api_key, years)  |>
         x -> innerjoin(
