@@ -17,11 +17,14 @@ bea_api_key = "<bea_api_key>"
 
 years = 2000:2023
 
-df = load_cps_data_api(census_api_key, years)
+census_data = load_cps_data_api(census_api_key, years)
 
-cps_nipa = cps_vs_nipa_income_categories(df[:income], bea_api_key, years)
+cps_nipa = cps_vs_nipa_income_categories(census_data[:income], bea_api_key, years)
+
+save_cps_data(census_data, cps_nipa, "data/cps", years)
 ```
 
+Alternatively
 
 
 

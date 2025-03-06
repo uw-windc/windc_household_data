@@ -22,4 +22,9 @@ include("bea.jl")
 
 export cps_vs_nipa_income_categories
 
+
+include("data_exporter.jl")
+
+export download_save_data, save_cps_data
+
 end # module windc_household_data
