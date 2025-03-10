@@ -1,4 +1,10 @@
+"""
+    magic_data(output_directory)
 
+Copy the files from the `magic_data` directory to the output directory. This copies
+two files, `labor_tax_rates.csv` and `capital_tax_rates.csv` which are created
+in the `SAGE` model.
+"""
 function magic_data(output_directory)
     if !isabspath(output_directory)
         output_directory = abspath(output_directory)
