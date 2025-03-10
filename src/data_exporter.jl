@@ -1,3 +1,20 @@
+
+function magic_data(output_directory)
+    if !isabspath(output_directory)
+        output_directory = abspath(output_directory)
+    end
+
+    if !isdir(output_directory)
+        mkpath(output_directory)
+    end
+
+    cp(joinpath(@__DIR__, "magic_data","labor_tax_rates.csv"), joinpath(output_directory, "labor_tax_rates.csv"))
+    cp(joinpath(@__DIR__, "magic_data","capital_tax_rates.csv"), joinpath(output_directory, "capital_tax_rates.csv"))
+
+end
+
+
+
 """
     download_save_data(census_api_key, bea_api_key, years, output_directory; states = STATES)
 
@@ -27,6 +44,7 @@ function download_save_data(
     bea_data = cps_vs_nipa_income_categories(census_data[:income], bea_api_key, years)
 
     save_cps_data(census_data, bea_data, output_directory, years)
+    magic_data(output_directory)
 end
 
 """
