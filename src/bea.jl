@@ -55,7 +55,7 @@ end
 
 
 """
-    cps_vs_nipa_income_categories(income::DataFrame, api_key, years)
+    cps_vs_nipa_income_categories(income::DataFrame, api_key::String, years)
 
 Return a comparison between CPS and NIPA income categories.
 
@@ -69,7 +69,7 @@ Return a comparison between CPS and NIPA income categories.
 
 A DataFrame with the columns `year`, `nipa`, `cps`, `pct_diff`, and `category`.
 """
-function cps_vs_nipa_income_categories(income::DataFrame, api_key, years)
+function cps_vs_nipa_income_categories(income::DataFrame, bea_data::DataFrame, years)
 
     line_to_source = DataFrame(
         [
@@ -96,7 +96,6 @@ function cps_vs_nipa_income_categories(income::DataFrame, api_key, years)
         [:LineNumber, :source, :category]
     )
 
-
     cps_totals = income |>
         x -> innerjoin(
             x,
@@ -106,7 +105,7 @@ function cps_vs_nipa_income_categories(income::DataFrame, api_key, years)
         x -> groupby(x, [:year, :LineNumber, :category]) |>
         x -> combine(x, :value => sum => :cps) 
 
-    bea_data = get_bea_nipa_data(api_key, years)  |>
+    output = bea_data  |>
         x -> innerjoin(
             x,
             cps_totals,
@@ -119,6 +118,62 @@ function cps_vs_nipa_income_categories(income::DataFrame, api_key, years)
         ) |>
         x -> select(x, :year, :nipa, :cps, :pct_diff, :category)
 
-    return bea_data
+    return output
 
 end
+
+function cps_vs_nipa_income_categories(income::DataFrame, api_key::String, years)
+
+    bea_data = get_bea_nipa_data(api_key, years)
+
+    return cps_vs_nipa_income_categories(income::DataFrame, bea_data::DataFrame, years)
+
+end
+
+
+"""
+    create_nipa_windc(bea_data::DataFrame, type::Symbol)
+
+Create a DataFrame comparing the WiNDC vs NIPA data. This uses two magic files,
+`ld0_windc.csv` and `kd0_windc.csv` to create the comparison.
+
+## Arguments
+
+- `bea_data` - A DataFrame with the NIPA data
+- `type` - Either `:labor` or `:capital`
+"""
+function create_nipa_windc(bea_data, type)
+    @assert type∈[:labor, :capital] "type must be either :labor or :capital"
+
+    file_name = type==:labor ? "ld0_windc.csv" : "kd0_windc.csv"
+    categories = type==:labor ? ["2"] : ["9","12","13"]
+
+    kd0 = CSV.read(
+        joinpath(@__DIR__, "magic_data", file_name),
+        DataFrame,
+        header = [:year, :state, :good, :windc],
+        skipto = 2
+    ) |>
+    x -> groupby(x, [:year]) |>
+    x -> combine(x, :windc => (y -> 1e9*sum(y)) => :windc) 
+
+    windc = bea_data |>
+        x -> subset(x, 
+            :LineNumber => ByRow(∈(categories))
+        ) |>
+        x -> groupby(x, [:year]) |>
+        x -> combine(x, :nipa => sum => :nipa) |>
+        x -> leftjoin(
+            x,
+            kd0,
+            on = [:year],
+        ) |>    
+        x -> transform(x,
+            [:windc,:nipa] => ByRow((w,n) -> 100*(w/n - 1)) => :pct_diff,
+            :windc => ByRow(y -> type) => :category
+        )  
+    
+    return windc
+
+end
+

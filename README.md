@@ -9,11 +9,11 @@
 cps/cps_vs_nipa_income_categories.csv
 cps/cps_asec_income_totals_2000_2023.csv
 cps/cps_asec_numberhh_2000_2023.csv
+cps/labor_tax_rates.csv
+cps/capital_tax_rates.csv
 
 
 cps/windc_vs_nipa_domestic_capital.csv
-cps/labor_tax_rates.csv
-cps/capital_tax_rates.csv
 
 
 

@@ -46,10 +46,11 @@ function download_save_data(
     )
 
     census_data = load_cps_data_api(census_api_key, years; states = states)
+    bea_data = get_bea_nipa_data(bea_api_key, years)
+    
+    nipa_data = cps_vs_nipa_income_categories(census_data[:income], bea_data, years)
 
-    bea_data = cps_vs_nipa_income_categories(census_data[:income], bea_api_key, years)
-
-    save_cps_data(census_data, bea_data, output_directory, years)
+    save_cps_data(census_data, nipa_data, output_directory, years)
     magic_data(output_directory)
 end
 
@@ -74,6 +75,17 @@ function save_cps_data(census_data, bea_data, output_directory, years)
     end
 
     year_range = "$(minimum(years))_$(maximum(years))"
+
+    create_nipa_windc(bea_data, :capital) |>
+        x -> transform(x,
+            [:nipa, :windc] => ByRow((n,w) -> n/w) => :domestic_share
+        ) |>
+        x -> select(x, [:year, :nipa, :windc, :domestic_share]) |>
+        x -> CSV.write(
+            joinpath(output_directory,"windc_vs_nipa_domestic_capital_$year_range.csv"), 
+            x
+        )
+    
 
     CSV.write(joinpath(output_directory,"cps_asec_income_totals_$year_range.csv"), census_data[:income])
     CSV.write(joinpath(output_directory,"cps_asec_income_shares_$year_range.csv"), census_data[:shares])
