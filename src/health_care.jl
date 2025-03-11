@@ -99,6 +99,12 @@ function extrapolate_cms_data_single_state(df, years)
     return vcat(df, df_new)
 end
 
+"""
+    extrapolate_cms_data(cms::DataFrame, years)
+
+Extrapolate CMS data for each given year. Performs the extrapolation for each state
+independently.
+"""
 function extrapolate_cms_data(cms::DataFrame, years)
     return groupby(cms , :state) |>
         x -> combine(x, (y -> extrapolate_cms_data_single_state(y, years)))
