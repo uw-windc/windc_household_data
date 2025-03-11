@@ -111,12 +111,12 @@ function cps_vs_nipa_income_categories(income::DataFrame, bea_data::DataFrame, y
             cps_totals,
             on = [:year, :LineNumber]
         ) |>
-        x -> select(x, Not(:LineNumber)) |>
+        #x -> select(x, Not(:LineNumber)) |>
         
         x -> transform(x,
             [:nipa, :cps] => ByRow((n,c) -> 100*(c/n-1)) => :pct_diff
         ) |>
-        x -> select(x, :year, :nipa, :cps, :pct_diff, :category)
+        x -> select(x, :year, :nipa, :LineNumber, :cps, :pct_diff, :category)
 
     return output
 

@@ -27,9 +27,15 @@ Pull the raw data directly from the API
 """
 function get_cps_data_api(year, vars, api_key)
 
-    url = "https://api.census.gov/data/$year/cps/asec/mar?get=$vars&for=state:*&key=$(api_key)"
+    url = "https://api.census.gov/data/$year/cps/asec/mar"
 
-    response = HTTP.get(url);
+    query = Dict(
+        "get" => vars,
+        "for" => "state:*",
+        "key" => api_key
+    )
+
+    response = HTTP.get(url; query=query);
     response_text = String(response.body)
     data = JSON.parse(response_text);
 
@@ -71,7 +77,7 @@ function clean_cps_data_year(year, cps_rw, variables, api_key; states = STATES)
             states,
             on = :state_code => :state_fips
         ) |>
-        x -> select(x, Not(:state_code))
+        x -> select(x, Not(:state_code, :state_name))
 
 
     # Count by income breakdowns and State

@@ -14,8 +14,8 @@ function magic_data(output_directory)
         mkpath(output_directory)
     end
 
-    cp(joinpath(@__DIR__, "magic_data","labor_tax_rates.csv"), joinpath(output_directory, "labor_tax_rates.csv"))
-    cp(joinpath(@__DIR__, "magic_data","capital_tax_rates.csv"), joinpath(output_directory, "capital_tax_rates.csv"))
+    cp(joinpath(@__DIR__, "magic_data","labor_tax_rates.csv"), joinpath(output_directory, "labor_tax_rates.csv"); force=true)
+    cp(joinpath(@__DIR__, "magic_data","capital_tax_rates.csv"), joinpath(output_directory, "capital_tax_rates.csv"); force=true)
 
 end
 
@@ -31,7 +31,7 @@ Download and save the CPS and BEA data to the output directory.
 - `census_api_key` - The Census API key. Request an API key from the [Census website](https://api.census.gov/data/key_signup.html)
 - `bea_api_key` - The BEA API key. Request an API key from the [BEA website](https://apps.bea.gov/api/signup/)
 - `years` - The years to pull data for, as a range 2000:2023
-- `output_directory` - The directory to save the data
+- `output_root_directory` - The directory to save the data
 
 ## Optional Arguments
 
@@ -41,17 +41,35 @@ function download_save_data(
         census_api_key, 
         bea_api_key, 
         years,
-        output_directory; 
+        output_root_directory; 
         states = STATES
     )
 
+    
+    ## CPS
     census_data = load_cps_data_api(census_api_key, years; states = states)
     bea_data = get_bea_nipa_data(bea_api_key, years)
     
-    nipa_data = cps_vs_nipa_income_categories(census_data[:income], bea_data, years)
+    
 
-    save_cps_data(census_data, nipa_data, output_directory, years)
-    magic_data(output_directory)
+    cps_path = joinpath(output_root_directory, "cps")
+    save_cps_data(census_data, bea_data, cps_path, years)
+    magic_data(cps_path)
+    
+
+    ## Health Care
+    health_tmp_dir = joinpath(output_root_directory, "health_care", "tmp")
+    cms = get_cms_data(health_tmp_dir; states = states)
+    rm(health_tmp_dir, recursive=true)
+    cms = extrapolate_cms_data(cms, years)
+
+    acs = get_census_health_data(census_api_key, years)
+
+    public_health = public_health_benefits(cms, acs)
+
+
+    health_path = joinpath(output_root_directory, "health_care")
+    save_public_health_benefits_data(public_health, health_path)
 end
 
 """
@@ -76,6 +94,8 @@ function save_cps_data(census_data, bea_data, output_directory, years)
 
     year_range = "$(minimum(years))_$(maximum(years))"
 
+    nipa_data = cps_vs_nipa_income_categories(census_data[:income], bea_data, years)
+
     create_nipa_windc(bea_data, :capital) |>
         x -> transform(x,
             [:nipa, :windc] => ByRow((n,w) -> n/w) => :domestic_share
@@ -91,5 +111,23 @@ function save_cps_data(census_data, bea_data, output_directory, years)
     CSV.write(joinpath(output_directory,"cps_asec_income_shares_$year_range.csv"), census_data[:shares])
     CSV.write(joinpath(output_directory,"cps_asec_income_counts_$year_range.csv"), census_data[:count])
     CSV.write(joinpath(output_directory,"cps_asec_numberhh_$year_range.csv"), census_data[:numhh])
-    CSV.write(joinpath(output_directory,"cps_vs_nipa_income_categories_$year_range.csv"), bea_data)
+    CSV.write(joinpath(output_directory,"cps_vs_nipa_income_categories_$year_range.csv"), nipa_data)
+end
+
+"""
+    save_public_health_benefits_data(health::DataFrame, output_directory)
+
+Save the public health benefits data to the output directory.
+"""
+function save_public_health_benefits_data(health::DataFrame, output_directory)
+    if !isabspath(output_directory)
+        output_directory = abspath(output_directory)
+    end
+
+    if !isdir(output_directory)
+        mkpath(output_directory)
+    end
+
+    CSV.write(joinpath(output_directory,"public_health_benefits.csv"), health)
+
 end

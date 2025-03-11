@@ -11,13 +11,10 @@ cps/cps_asec_income_totals_2000_2023.csv
 cps/cps_asec_numberhh_2000_2023.csv
 cps/labor_tax_rates.csv
 cps/capital_tax_rates.csv
-
-
 cps/windc_vs_nipa_domestic_capital.csv
 
-
-
 health_care/public_health_benefits_2009_2019.csv
+
 
 acs/acs_commuting_data.csv
 
