@@ -121,7 +121,22 @@ function acs_commuting(raw_commuting::DataFrame, wages::DataFrame)
         x -> select(x, :home_state, :work_state, :value)
 end
 
+"""
+    get_acs_commuting_data(census_data; year = 2020, file_name = "table1.xlsx")
 
+Download the ACS data and compute the commuting data.
+
+## Arguments
+
+- `census_data` - The CPS data from the API or a CSV file, output from 
+  [`load_cps_data_api`](@ref).
+
+## Optional Arguments
+
+- `year` - The year to pull the data for. Default is 2020. The commuting data
+    is released every 5 years, this is the most recent year or release.
+- `file_name` - The name of the file to download. Default is "table1.xlsx".
+"""
 function get_acs_commuting_data(census_data; year = 2020, file_name = "table1.xlsx")
     file_path = fetch_commuting_data("data/commuting", year = year, file_name = file_name)
     acs =  read_commuting_data(file_path)
