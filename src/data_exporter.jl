@@ -1,11 +1,11 @@
 """
-    magic_data(output_directory)
+    magic_data_cps(output_directory)
 
 Copy the files from the `magic_data` directory to the output directory. This copies
 two files, `labor_tax_rates.csv` and `capital_tax_rates.csv` which are created
 in the `SAGE` model.
 """
-function magic_data(output_directory)
+function magic_data_cps(output_directory)
     if !isabspath(output_directory)
         output_directory = abspath(output_directory)
     end
@@ -19,6 +19,24 @@ function magic_data(output_directory)
 
 end
 
+"""
+    magic_data_cex(output_directory)
+
+Copy the files from the `magic_data` directory to the output directory. This copies
+two files, `national_income_elasticities_CEX_2013_2017.csv` and `windc_pce_map.csv`.
+"""
+function magic_data_cex(output_directory)
+    if !isabspath(output_directory)
+        output_directory = abspath(output_directory)
+    end
+
+    if !isdir(output_directory)
+        mkpath(output_directory)
+    end
+
+    cp(joinpath(@__DIR__, "magic_data","national_income_elasticities_CEX_2013_2017.csv"), joinpath(output_directory, "national_income_elasticities_CEX_2013_2017.csv"); force=true)
+    cp(joinpath(@__DIR__, "magic_data","windc_pce_map.csv"), joinpath(output_directory, "windc_pce_map.csv"); force=true)
+end
 
 
 """
@@ -42,7 +60,9 @@ function download_save_data(
         bea_api_key, 
         years,
         output_root_directory; 
-        states = STATES
+        states = STATES,
+        acs_file_name = "table1.xlsx",
+        acs_year = 2020
     )
 
     
@@ -53,7 +73,7 @@ function download_save_data(
 
     cps_path = joinpath(output_root_directory, "cps")
     save_cps_data(census_data, bea_data, cps_path)
-    magic_data(cps_path)
+    magic_data_cps(cps_path)
     
 
     ## Health Care
@@ -71,8 +91,15 @@ function download_save_data(
     save_public_health_benefits_data(public_health, health_path)
 
     ## ACS Commuting Data
-    #income = cps_income(census_data)
-    #numhh = cps_number_households(census_data)
+
+    acs_commuting = get_acs_commuting_data(census_data; file_name = acs_file_name, year = acs_year)
+    acs_path = joinpath(output_root_directory, "acs")
+    save_acs_commuting_data(acs_commuting, acs_path)
+
+    ## CEX
+
+    ces_path = joinpath(output_root_directory, "cex")
+    magic_data_cex(ces_path)
     
 end
 
@@ -138,3 +165,18 @@ function save_public_health_benefits_data(health::DataFrame, output_directory)
     CSV.write(joinpath(output_directory,"public_health_benefits.csv"), health)
 
 end
+
+
+function save_acs_commuting_data(acs_commuting::DataFrame, output_directory)
+    if !isabspath(output_directory)
+        output_directory = abspath(output_directory)
+    end
+
+    if !isdir(output_directory)
+        mkpath(output_directory)
+    end
+
+    CSV.write(joinpath(output_directory,"acs_commuting_data.csv"), acs_commuting)
+
+end
+
