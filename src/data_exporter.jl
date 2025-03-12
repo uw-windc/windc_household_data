@@ -40,9 +40,18 @@ end
 
 
 """
-    download_save_data(census_api_key, bea_api_key, years, output_directory; states = STATES)
+    function download_save_data(
+        census_api_key, 
+        bea_api_key, 
+        years,
+        output_root_directory; 
+        states = STATES,
+        acs_file_name = "table1.xlsx",
+        acs_year = 2020
+    )
 
-Download and save the CPS and BEA data to the output directory.
+Download and save the raw household data and save it into the correct directory
+structure.
 
 ## Arguments
 
@@ -54,6 +63,22 @@ Download and save the CPS and BEA data to the output directory.
 ## Optional Arguments
 
 - `states` - A DataFrame with the state FIPS and abbreviations. Default is `STATES`.
+- `acs_file_name` - The name of the ACS commuting data file. Default is "table1.xlsx".
+- `acs_year` - The year of the ACS data. Default is 2020.
+
+## Functions Called
+
+- [`load_cps_data_api`](@ref)
+- [`get_bea_nipa_data`](@ref)
+- [`save_cps_data`](@ref)
+- [`magic_data_cps`](@ref)
+- [`get_cms_data`](@ref)
+- [`extrapolate_cms_data`](@ref)
+- [`get_census_health_data`](@ref)
+- [`public_health_benefits`](@ref)
+- [`save_public_health_benefits_data`](@ref)
+- [`get_acs_commuting_data`](@ref)
+- [`save_acs_commuting_data`](@ref)
 """
 function download_save_data(
         census_api_key, 
@@ -166,7 +191,11 @@ function save_public_health_benefits_data(health::DataFrame, output_directory)
 
 end
 
+"""
+    save_acs_commuting_data(acs_commuting::DataFrame, output_directory)
 
+Save the ACS commuting data to the output directory.
+"""
 function save_acs_commuting_data(acs_commuting::DataFrame, output_directory)
     if !isabspath(output_directory)
         output_directory = abspath(output_directory)

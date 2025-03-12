@@ -9,22 +9,7 @@ pkg> add https://github.com/uw-windc/windc_household_data
 ```
 
 
-```julia
-using windc_household_data
-
-census_api_key = "<census_api_key>"
-bea_api_key = "<bea_api_key>"
-
-years = 2000:2023
-
-census_data = load_cps_data_api(census_api_key, years)
-
-cps_nipa = cps_vs_nipa_income_categories(census_data[:income], bea_api_key, years)
-
-save_cps_data(census_data, cps_nipa, "data/cps", years)
-```
-
-Alternatively, you can download and save the data in a single operation.
+Download the data is a single function call:
 
 ```julia
 using windc_household_data
@@ -34,7 +19,13 @@ bea_api_key = "<bea_api_key>"
 
 years = 2000:2023
 
-download_save_data(census_api_key, bea_api_key, years, "data/cps")
+download_save_data(
+    census_api_key, 
+    bea_api_key, 
+    years, 
+    "data/";
+    acs_year = 2020
+    )
 ```
 
 ## API Reference
