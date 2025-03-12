@@ -50,10 +50,9 @@ function download_save_data(
     census_data = load_cps_data_api(census_api_key, years; states = states)
     bea_data = get_bea_nipa_data(bea_api_key, years)
     
-    
 
     cps_path = joinpath(output_root_directory, "cps")
-    save_cps_data(census_data, bea_data, cps_path, years)
+    save_cps_data(census_data, bea_data, cps_path)
     magic_data(cps_path)
     
 
@@ -70,6 +69,11 @@ function download_save_data(
 
     health_path = joinpath(output_root_directory, "health_care")
     save_public_health_benefits_data(public_health, health_path)
+
+    ## ACS Commuting Data
+    #income = cps_income(census_data)
+    #numhh = cps_number_households(census_data)
+    
 end
 
 """
@@ -83,7 +87,7 @@ Save the CPS and BEA data to the output directory.
 - `bea_data` - A DataFrame with the BEA data
 - `output_directory` - The directory to save the data
 """
-function save_cps_data(census_data, bea_data, output_directory, years)
+function save_cps_data(census_data, bea_data, output_directory)
     if !isabspath(output_directory)
         output_directory = abspath(output_directory)
     end
@@ -92,9 +96,12 @@ function save_cps_data(census_data, bea_data, output_directory, years)
         mkpath(output_directory)
     end
 
-    year_range = "$(minimum(years))_$(maximum(years))"
+    income = cps_income(census_data)
+    numhh = cps_number_households(census_data)
+    shares = cps_income_shares(census_data)
+    count = cps_count_observations(census_data)
 
-    nipa_data = cps_vs_nipa_income_categories(census_data[:income], bea_data, years)
+    nipa_data = cps_vs_nipa_income_categories(income, bea_data)
 
     create_nipa_windc(bea_data, :capital) |>
         x -> transform(x,
@@ -102,16 +109,16 @@ function save_cps_data(census_data, bea_data, output_directory, years)
         ) |>
         x -> select(x, [:year, :nipa, :windc, :domestic_share]) |>
         x -> CSV.write(
-            joinpath(output_directory,"windc_vs_nipa_domestic_capital_$year_range.csv"), 
+            joinpath(output_directory,"windc_vs_nipa_domestic_capital.csv"), 
             x
         )
     
 
-    CSV.write(joinpath(output_directory,"cps_asec_income_totals_$year_range.csv"), census_data[:income])
-    CSV.write(joinpath(output_directory,"cps_asec_income_shares_$year_range.csv"), census_data[:shares])
-    CSV.write(joinpath(output_directory,"cps_asec_income_counts_$year_range.csv"), census_data[:count])
-    CSV.write(joinpath(output_directory,"cps_asec_numberhh_$year_range.csv"), census_data[:numhh])
-    CSV.write(joinpath(output_directory,"cps_vs_nipa_income_categories_$year_range.csv"), nipa_data)
+    CSV.write(joinpath(output_directory,"cps_asec_income_totals.csv"), income)
+    CSV.write(joinpath(output_directory,"cps_asec_income_shares.csv"), shares)
+    CSV.write(joinpath(output_directory,"cps_asec_income_counts.csv"), count)
+    CSV.write(joinpath(output_directory,"cps_asec_numberhh.csv"), numhh)
+    CSV.write(joinpath(output_directory,"cps_vs_nipa_income_categories.csv"), nipa_data)
 end
 
 """

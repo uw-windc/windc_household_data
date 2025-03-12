@@ -55,7 +55,7 @@ end
 
 
 """
-    cps_vs_nipa_income_categories(income::DataFrame, api_key::String, years)
+    cps_vs_nipa_income_categories(income::DataFrame, api_key::String)
 
 Return a comparison between CPS and NIPA income categories.
 
@@ -63,13 +63,12 @@ Return a comparison between CPS and NIPA income categories.
 
 - `income` - A DataFrame with the CPS income data
 - `api_key` - Request an API key from the [BEA website](https://apps.bea.gov/api/signup/)
-- `years` - The years to pull data for, as a range 2000:2023
 
 ## Returns
 
 A DataFrame with the columns `year`, `nipa`, `cps`, `pct_diff`, and `category`.
 """
-function cps_vs_nipa_income_categories(income::DataFrame, bea_data::DataFrame, years)
+function cps_vs_nipa_income_categories(income::DataFrame, bea_data::DataFrame)
 
     line_to_source = DataFrame(
         [
@@ -116,7 +115,7 @@ function cps_vs_nipa_income_categories(income::DataFrame, bea_data::DataFrame, y
         x -> transform(x,
             [:nipa, :cps] => ByRow((n,c) -> 100*(c/n-1)) => :pct_diff
         ) |>
-        x -> select(x, :year, :nipa, :LineNumber, :cps, :pct_diff, :category)
+        x -> select(x, :year, :nipa, :cps, :pct_diff, :category)
 
     return output
 
@@ -126,7 +125,7 @@ function cps_vs_nipa_income_categories(income::DataFrame, api_key::String, years
 
     bea_data = get_bea_nipa_data(api_key, years)
 
-    return cps_vs_nipa_income_categories(income::DataFrame, bea_data::DataFrame, years)
+    return cps_vs_nipa_income_categories(income::DataFrame, bea_data::DataFrame)
 
 end
 
