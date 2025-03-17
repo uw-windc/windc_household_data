@@ -39,6 +39,8 @@ include("health_care.jl")
 
 include("commuting.jl")
 
+include("soi.jl")
+
 include("data_exporter.jl")
 
 export download_save_data, save_cps_data

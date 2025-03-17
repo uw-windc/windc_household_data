@@ -87,7 +87,8 @@ function download_save_data(
         output_root_directory; 
         states = STATES,
         acs_file_name = "table1.xlsx",
-        acs_year = 2020
+        acs_year = 2020,
+        soi_years = 2014:2017
     )
 
     
@@ -125,6 +126,11 @@ function download_save_data(
 
     ces_path = joinpath(output_root_directory, "cex")
     magic_data_cex(ces_path)
+    
+    ## SOI
+
+    soi_path = joinpath(output_root_directory, "soi")
+    soi_data(soi_path; years = soi_years)
     
 end
 
