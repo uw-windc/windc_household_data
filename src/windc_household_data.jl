@@ -2,7 +2,7 @@ module windc_household_data
 
 using DataFrames, HTTP, CSV, JSON, ZipFile, Downloads
 
-using GLM, XLSX
+using GLM, XLSX, Dates
 
 const STATES = DataFrame(
     state_fips = ["1","2","4","5","6","8","9","10","11","12","13","15","16","17","18",

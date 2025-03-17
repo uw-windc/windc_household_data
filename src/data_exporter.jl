@@ -131,6 +131,11 @@ function download_save_data(
 
     soi_path = joinpath(output_root_directory, "soi")
     soi_data(soi_path; years = soi_years)
+
+
+    ## README
+
+    write_readme(output_root_directory, years, soi_years, acs_year)
     
 end
 
@@ -215,3 +220,37 @@ function save_acs_commuting_data(acs_commuting::DataFrame, output_directory)
 
 end
 
+"""
+    write_readme(output_directory, years, soi_years, acs_year)
+
+Write the README file to the output directory. This file contains the years
+for the data that was pulled.
+"""
+function write_readme(output_directory, years, soi_years, acs_year)
+
+    if !isabspath(output_directory)
+        output_directory = abspath(output_directory)
+    end
+
+    if !isdir(output_directory)
+        mkpath(output_directory)
+    end
+
+    contents = """
+# WiNDC Household Data
+
+This file was generated on $(Dates.today()). It pulled data for the years 
+2000-2023 from the Census API and the BEA API. 
+
+The data was then processed to generate the following tables with the given years:
+
+* cps - $years
+* soi - $soi_years
+* health_care - $years
+* acs - $acs_year
+"""
+    
+    open(joinpath(output_directory,"README.md"), "w") do io
+        write(io, contents)
+    end
+end
